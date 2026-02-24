@@ -1,0 +1,42 @@
+package main
+
+import (
+	"adder/pkg/api"
+	"context"
+	"flag"
+	"log"
+	"strconv"
+
+	"google.golang.org/grpc"
+)
+
+func main() {
+	flag.Parse()
+	if flag.NArg() < 2 {
+		log.Fatal("not enough args")
+	}
+
+	x, err := strconv.Atoi(flag.Arg(0))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	y, err := strconv.Atoi(flag.Arg(1))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	conn, err := grpc.NewClient(":8080", grpc.WithInsecure())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	c := api.NewAdderClient(conn)
+	res, err := c.Add(context.Background(), &api.AddRequest{X: int32(x), Y: int32(y)})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println(res.GetResult())
+}
